@@ -16,7 +16,7 @@ Guidance for Claude Code when working in this repository.
 
 1. **Design-first.** Before writing service/infra code, there must be an architecture diagram + the relevant `.proto` contract + an ADR. Cheap to change on paper.
 2. **Decisions are documented.** Any non-trivial choice → `docs/adr/ADR-NNN-*.md`. Don't silently pick a library/pattern.
-3. **Dummy endpoints with intent.** Each endpoint demonstrates exactly one concept (a gRPC call, a NATS event, `/healthz`+`/metrics`, one Postgres touch). No real business logic.
+3. **Dummy endpoints with intent.** Each endpoint demonstrates exactly one concept (a sync REST call, a NATS event, `/healthz`+`/metrics`, one Postgres touch). No real business logic.
 4. **Build infra once, in the right layer.** "Docker first" applies ONLY to the **app layer**. Platform-layer infra (observability, GitOps, OpenTofu) is built **after** Kubernetes — never twice.
 5. **Same app runs at every stage.** Migrating the *same* services compose→kind→managed is the proof of mastery; do not rewrite services per stage.
 6. **Verify Bun compatibility before adopting.** Bun has rough edges; spike risky deps first.
@@ -27,8 +27,8 @@ Guidance for Claude Code when working in this repository.
 |---|---|
 | Runtime | **Bun** (ADR-001) |
 | HTTP framework | **Hono** (ADR-002) |
-| API north-south (client) | **REST/JSON** (ADR-003) |
-| API east-west (sync) | **gRPC via ConnectRPC/buf** — Connect protocol over HTTP/1.1, NOT pure-gRPC HTTP/2 (ADR-005) |
+| Sync comms (v1) | **REST/JSON** — client-facing AND internal sync calls (ADR-003) |
+| Sync comms (later evolution) | **gRPC via ConnectRPC/buf** — Connect protocol over HTTP/1.1, NOT pure-gRPC HTTP/2. Deferred: v1 uses REST; migrate internal sync calls to gRPC in a later phase as a documented evolution (ADR-005) |
 | Async events | **NATS + JetStream** (ADR-006) |
 | Data | **Postgres + Drizzle** (`drizzle-orm/bun-sql`), **database-per-service** (ADR-007) |
 | Repo | **Monorepo** — Turborepo + Bun workspaces, per-service deploys (ADR-008) |
@@ -42,7 +42,9 @@ Guidance for Claude Code when working in this repository.
 | Supply chain | Trivy scan + SBOM (Syft) + cosign signing → Kyverno "signed-only" (ADR-011, stretch) |
 | Polyglot (stretch) | Go (`connect-go` + `nats.go`) + Rust (`tonic`/`axum` + `async-nats`) services sharing the same protobuf |
 
-**Comms by intent:** REST = client-facing · gRPC = sync "need an answer now" · NATS = async "this happened, react whenever".
+**Comms by intent:** REST = client-facing + internal sync "need an answer now" · NATS = async "this happened, react whenever". gRPC is deferred (later evolution of the internal sync path).
+
+**Services (5):** `gateway` (REST entry) · `orders` (REST server + event producer, owns Postgres) · `inventory` (REST sync query) · `notifications` (NATS consumer → Go in polyglot stretch) · `analytics` (NATS consumer → Rust in polyglot stretch). The Orders→Inventory call is the synchronous path; `order.created` fans out to notifications + analytics asynchronously.
 
 ## Repo structure (target)
 
@@ -53,11 +55,11 @@ vortex/
 │   └── adr/                      # ADR-001 … (decision records)
 ├── proto/                        # shared protobuf contracts (buf)
 ├── services/
-│   ├── gateway/                  # Bun + Hono, REST → gRPC
-│   ├── service-a/                # Bun + Hono, gRPC server + emits NATS
-│   ├── service-b/                # Bun, consumes NATS
-│   ├── service-go/               # (stretch) connect-go
-│   └── service-rust/             # (stretch) tonic
+│   ├── gateway/                  # Bun + Hono, REST entry point
+│   ├── orders/                   # Bun + Hono, REST server + emits NATS, owns Postgres
+│   ├── inventory/                # Bun + Hono, REST sync query, own DB
+│   ├── notifications/            # Bun, NATS consumer (→ Go in polyglot stretch)
+│   └── analytics/                # Bun, NATS consumer (→ Rust in polyglot stretch)
 ├── deploy/
 │   ├── compose/                  # Phase 1: docker-compose.yml
 │   ├── k8s/                      # Phase 2: raw manifests
@@ -70,11 +72,11 @@ vortex/
 ## Roadmap (each phase = a learning checkpoint, finished + understood before advancing)
 
 - **Phase 0 — Design + spike:** architecture diagram + protos + ADRs; Bun compatibility spike (Hono+Connect+NATS+Drizzle).
-- **Phase 1 — Docker app-layer:** dummy services + gRPC + 1 NATS flow + Postgres; multi-stage Dockerfiles + `docker compose up`; basic CI.
+- **Phase 1 — Docker app-layer:** 5 services (REST + NATS events) + Postgres; multi-stage Dockerfiles + `docker compose up`; basic CI. (gRPC deferred to a later evolution phase.)
 - **Phase 2 — Kubernetes (headline):** kind → raw YAML → Helm; k9s + Tilt for DX.
 - **Phase 3 — Observability:** LGTM + OpenTelemetry; one trace REST→gRPC→NATS→consumer in Grafana.
 - **Phase 4 — GitOps:** ArgoCD pulls from monorepo + Sealed Secrets.
-- **Stretch (none block "done"):** polyglot Go/Rust · cloud + OpenTofu · cosign/SBOM enforcement · KEDA (scale on NATS lag) · Gateway API · service mesh.
+- **Stretch (none block "done"):** gRPC/ConnectRPC for internal sync calls (documented evolution from REST) · polyglot Go/Rust · cloud + OpenTofu · cosign/SBOM enforcement · KEDA (scale on NATS lag) · Gateway API · service mesh.
 
 ## Conventions
 

@@ -302,3 +302,11 @@ vortex/
 
 ### Session Reflections
 Highly focused, decision-driven session. User drove tooling choices with strong instincts (learn-new over safe, questioned scope appropriately, caught the "don't build twice" point independently). Facilitation leaned on the CV to keep every choice tied to career ROI.
+
+## Post-session amendment (2026-06-10)
+
+**Comms simplification + service topology revision** (decided after review):
+
+- **gRPC DEFERRED.** v1 uses **REST (sync) + NATS/JetStream (async events)** only. REST covers both client-facing and internal synchronous calls. gRPC/ConnectRPC (ADR-005) moves to a later phase as a **documented evolution** of the internal sync path (migrate REST → gRPC for typed protobuf contracts + polyglot codegen). Rationale: REST is already a CV strength so it adds no friction; deferring keeps v1 simple and turns gRPC into an "I evolved the architecture" story; the project's core thesis (K8s/observability/GitOps/IaC) does not depend on gRPC.
+- **5-service topology** (was 2): `gateway` (REST entry) → `orders` (REST server + event producer, owns Postgres) → `inventory` (REST sync query, own DB); `orders` emits `order.created` → NATS fans out to `notifications` + `analytics` (independent consumers). The Orders→Inventory call demonstrates the synchronous "need an answer now" path; the event fan-out demonstrates async decoupling/extensibility.
+- **Polyglot mapping:** in the stretch phase, `notifications` → **Go** (`nats.go`), `analytics` → **Rust** (`async-nats`) — same NATS events, proving a language-agnostic platform.
