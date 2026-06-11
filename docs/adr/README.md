@@ -23,7 +23,7 @@ artifacts**: the ADRs are part of the product, not an afterthought.
 | [004](ADR-004-containerization-strategy.md) | Containerization strategy (multi-stage, non-root) | ✅ Accepted |
 | 005 | gRPC via ConnectRPC — later evolution of internal sync | ⏳ Planned |
 | 006 | NATS + JetStream for async events | ⏳ Planned |
-| 007 | Postgres + Drizzle, database-per-service | ⏳ Planned |
+| [007](ADR-007-postgres-drizzle-db-per-service.md) | Postgres + Drizzle, database-per-service | ✅ Accepted |
 | [008](ADR-008-monorepo-bun-workspaces.md) | Monorepo with Bun workspaces (Turborepo deferred) | ✅ Accepted |
 | 009 | Bun compatibility spike (task zero) | ⏳ Planned |
 | 010 | OpenTofu for cloud IaC | ⏳ Planned |
