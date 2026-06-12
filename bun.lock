@@ -31,6 +31,19 @@
         "@vortex/tsconfig": "workspace:*",
       },
     },
+    "services/inventory": {
+      "name": "@vortex/inventory",
+      "version": "0.0.0",
+      "dependencies": {
+        "@vortex/shared-types": "workspace:*",
+        "drizzle-orm": "^0.45.0",
+        "hono": "^4.6.0",
+      },
+      "devDependencies": {
+        "@vortex/tsconfig": "workspace:*",
+        "drizzle-kit": "^0.31.0",
+      },
+    },
     "services/orders": {
       "name": "@vortex/orders",
       "version": "0.0.0",
@@ -109,6 +122,8 @@
     "@types/node": ["@types/node@25.9.3", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-603BddQMv3pUcr4U2dhujk83N2tTDVr/34wII2B6bJy6g+8WD6yUb11jszNs0gdi4PesVWl7ABt8nYMVpnLUcg=="],
 
     "@vortex/gateway": ["@vortex/gateway@workspace:services/gateway"],
+
+    "@vortex/inventory": ["@vortex/inventory@workspace:services/inventory"],
 
     "@vortex/orders": ["@vortex/orders@workspace:services/orders"],
 
