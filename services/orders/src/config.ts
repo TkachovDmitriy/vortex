@@ -2,6 +2,7 @@
 export interface OrdersConfig {
   readonly port: number
   readonly databaseUrl: string
+  readonly inventoryUrl: string
 }
 
 export const config: OrdersConfig = {
@@ -10,4 +11,7 @@ export const config: OrdersConfig = {
   // service DNS; locally it defaults to a dev Postgres.
   databaseUrl:
     process.env.DATABASE_URL ?? 'postgres://vortex:vortex@localhost:5432/orders',
+  // The synchronous "need an answer now" dependency (ADR-003): orders queries
+  // inventory for stock before confirming. Resolves via service DNS in compose/K8s.
+  inventoryUrl: process.env.INVENTORY_URL ?? 'http://localhost:3002',
 }

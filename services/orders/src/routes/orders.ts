@@ -4,6 +4,7 @@ import type { CreateOrderRequest, OrderResponse } from '@vortex/shared-types'
 import { db } from '../db/client.ts'
 import { orders as ordersTable, type OrderRow } from '../db/schema.ts'
 import { incr } from '../lib/metrics.ts'
+import { checkStock, InventoryUnavailableError } from '../lib/inventory.ts'
 
 /**
  * The orders REST API. orders is the only writer of its own database (ADR-007).
@@ -27,13 +28,27 @@ orders.post('/orders', async (c) => {
     return c.json({ error: 'invalid_order' }, 400)
   }
 
+  // The synchronous path (ADR-003): ask inventory whether there's enough stock
+  // before confirming. If inventory is unreachable, we cannot decide — surface
+  // 503 (the cost of sync coupling).
+  let status: OrderResponse['status']
+  try {
+    const stock = await checkStock(body.item)
+    status = stock.available >= body.quantity ? 'created' : 'rejected'
+  } catch (err) {
+    if (err instanceof InventoryUnavailableError) {
+      return c.json({ error: 'inventory_unavailable' }, 503)
+    }
+    throw err
+  }
+
   const [row] = await db
     .insert(ordersTable)
-    .values({ item: body.item, quantity: body.quantity, status: 'created' })
+    .values({ item: body.item, quantity: body.quantity, status })
     .returning()
 
-  // count successful creations only (after the insert, not on every attempt).
   incr('orders_created_total')
+  if (status === 'rejected') incr('orders_rejected_total')
 
   // TODO(ADR-006): emit `order.created` to NATS here once the event backbone lands.
   return c.json(toResponse(row!), 201)
