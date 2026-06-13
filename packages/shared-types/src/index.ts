@@ -30,3 +30,16 @@ export interface StockCheckResponse {
   available: number
   inStock: boolean
 }
+
+/**
+ * Async event (ADR-006): orders publishes this after persisting an order; NATS
+ * fans it out to independent consumers (notifications, analytics) that react
+ * whenever — no reply expected. The contrast to the synchronous StockCheck above.
+ */
+export interface OrderCreatedEvent {
+  orderId: string
+  item: string
+  quantity: number
+  status: OrderStatus
+  createdAt: string
+}
