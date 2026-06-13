@@ -11,6 +11,7 @@
     "db:migrate": "bun src/db/migrate.ts"
   },
   "dependencies": {
+    "@vortex/events": "workspace:*",
     "@vortex/shared-types": "workspace:*",
     "drizzle-orm": "^0.45.0",
     "hono": "^4.6.0"

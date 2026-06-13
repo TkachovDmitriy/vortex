@@ -1,5 +1,8 @@
 import { createApp } from './app.ts'
 import { config } from './config.ts'
+import { initEvents } from './lib/events.ts'
+
+await initEvents()
 
 const app = createApp()
 

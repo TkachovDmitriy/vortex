@@ -9,9 +9,12 @@ WORKDIR /app
 COPY package.json bun.lock ./
 COPY packages/tsconfig/package.json ./packages/tsconfig/
 COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/events/package.json ./packages/events/
 COPY services/gateway/package.json ./services/gateway/
 COPY services/orders/package.json ./services/orders/
 COPY services/inventory/package.json ./services/inventory/
+COPY services/notifications/package.json ./services/notifications/
+COPY services/analytics/package.json ./services/analytics/
 RUN bun install --frozen-lockfile
 
 # ---- release: copy deps + source, run as non-root ----
@@ -24,6 +27,9 @@ COPY services/orders ./services/orders
 # this service's node_modules (after source; the context excludes node_modules).
 COPY --from=install /app/node_modules ./node_modules
 COPY --from=install /app/services/orders/node_modules ./services/orders/node_modules
+# orders imports @vortex/events at runtime, whose own deps (nats) live in the
+# package's isolated node_modules — copy that too.
+COPY --from=install /app/packages/events/node_modules ./packages/events/node_modules
 USER bun
 EXPOSE 3000
 WORKDIR /app/services/orders

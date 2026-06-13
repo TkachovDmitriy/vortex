@@ -1,7 +1,24 @@
 import { migrate } from 'drizzle-orm/bun-sql/migrator'
 import { db } from './client.ts'
 
-/** Applies pending migrations from ./migrations, then exits. */
-await migrate(db, { migrationsFolder: `${import.meta.dir}/../../migrations` })
-console.log('orders: migrations applied')
-process.exit(0)
+/**
+ * Applies pending migrations, with retry. Bun's bun-sql driver occasionally
+ * throws "Connection closed" on the first connection to a just-ready Postgres;
+ * migrations are idempotent (tracked in __drizzle_migrations), so retry is safe.
+ */
+const folder = `${import.meta.dir}/../../migrations`
+
+for (let attempt = 1; ; attempt++) {
+  try {
+    await migrate(db, { migrationsFolder: folder })
+    console.log('orders: migrations applied')
+    process.exit(0)
+  } catch (err) {
+    if (attempt >= 10) {
+      console.error('orders: migration failed after retries:', err)
+      process.exit(1)
+    }
+    console.warn(`orders: migrate attempt ${attempt} failed, retrying...`)
+    await Bun.sleep(1000)
+  }
+}
