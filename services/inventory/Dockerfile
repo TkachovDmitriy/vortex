@@ -9,9 +9,12 @@ WORKDIR /app
 COPY package.json bun.lock ./
 COPY packages/tsconfig/package.json ./packages/tsconfig/
 COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/events/package.json ./packages/events/
 COPY services/gateway/package.json ./services/gateway/
 COPY services/orders/package.json ./services/orders/
 COPY services/inventory/package.json ./services/inventory/
+COPY services/notifications/package.json ./services/notifications/
+COPY services/analytics/package.json ./services/analytics/
 RUN bun install --frozen-lockfile
 
 # ---- release: copy deps + source, run as non-root ----
