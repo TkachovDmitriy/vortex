@@ -22,7 +22,7 @@ artifacts**: the ADRs are part of the product, not an afterthought.
 | [003](ADR-003-sync-comms-rest.md) | REST/JSON for synchronous comms (v1) | ✅ Accepted |
 | [004](ADR-004-containerization-strategy.md) | Containerization strategy (multi-stage, non-root) | ✅ Accepted |
 | 005 | gRPC via ConnectRPC — later evolution of internal sync | ⏳ Planned |
-| 006 | NATS + JetStream for async events | ⏳ Planned |
+| [006](ADR-006-nats-jetstream-async-events.md) | NATS + JetStream for async events | ✅ Accepted |
 | [007](ADR-007-postgres-drizzle-db-per-service.md) | Postgres + Drizzle, database-per-service | ✅ Accepted |
 | [008](ADR-008-monorepo-bun-workspaces.md) | Monorepo with Bun workspaces (Turborepo deferred) | ✅ Accepted |
 | 009 | Bun compatibility spike (task zero) | ⏳ Planned |
