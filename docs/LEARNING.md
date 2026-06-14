@@ -7,6 +7,27 @@
 > Theory/reference lives in the sibling repo: `../platform-engineer-handbook`.
 > This doc is the *mechanism* that turns reading into understanding.
 
+## Starting a new session (cold start)
+
+Sessions are stateless — the chat history is gone next time. **All durable context lives in files**,
+so a fresh session (or a fresh agent) re-derives it automatically:
+
+```
+new session in the vortex repo
+  → auto-loads CLAUDE.md
+      → Golden rule 0 points here (docs/LEARNING.md)
+          → which points to ../platform-engineer-handbook (theory)
+  → decisions are already in docs/adr/*.md
+```
+
+So you don't carry context manually. The ritual:
+1. `cd ~/projects/own-develop/vortex && claude` (CLAUDE.md loads itself).
+2. Say where you are + the mode, e.g. **"Phase 2, Kubernetes, tutor mode."**
+3. The AI: reads this protocol, ports/opens the matching handbook doc, runs the Theory → Lab → Check loop.
+
+If something must survive across sessions, it goes in a **file** (ADR, this doc, the handbook),
+never "in the conversation." Chat is scratch; repo is memory.
+
 ## The anti-goal
 
 > ❌ "The AI builds the platform while I review the diff."
@@ -44,8 +65,27 @@ First time you touch *any* skill → **tutor**, regardless of the table.
 2. **You implement.** Tutor/pair → you write it by hand. Autopilot → AI writes, you review the diff.
 3. **Break it, fix it.** Deliberately break one thing (wrong port, missing probe, bad selector),
    observe the failure, fix it. This is where understanding actually forms.
-4. **Quiz.** AI asks 2–3 interview questions from the matching handbook doc. Can't answer → not done.
+4. **Quiz.** AI asks the handbook's skill-check questions. Can't answer → not done.
 5. **Decide → ADR.** Any non-trivial choice → `docs/adr/ADR-NNN-*.md` (already vortex law).
+
+## Tutor mode format (HTB-style)
+
+Tutor mode mirrors **Hack The Box Academy**: read theory, do tasks in a lab, then submit answers
+that get graded. The lab is **not a sandbox VM — it's your real NixOS machine + vortex itself**.
+Each handbook section ends with:
+
+```
+<theory>
+🎯 Lab        — guided tasks with hints (run the commands)
+🏴 Challenge  — one unguided task: do it, then BREAK it and identify the layer
+❓ Skill check — deterministic questions (a number / one word / command output)
+                you submit answers; the AI grades pass/fail. Answer key hidden in <details>.
+🧠 Explain    — the interview exam: explain out loud, AI critiques
+```
+
+Why deterministic answers: a number or a socket state can be **graded unambiguously** — you can't
+hand-wave past it. A section isn't "done" until the skill check passes *and* you can do the explain tier.
+Progression is always **guided → unguided → skill check**, never straight to the answer.
 
 ## Definition of "done" (extends the roadmap's "finished + understood")
 
