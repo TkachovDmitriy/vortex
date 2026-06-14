@@ -1,0 +1,23 @@
+{
+  "name": "@vortex/orders",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "bun src/db/migrate.ts"
+  },
+  "dependencies": {
+    "@vortex/events": "workspace:*",
+    "@vortex/shared-types": "workspace:*",
+    "drizzle-orm": "^0.45.0",
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@vortex/tsconfig": "workspace:*",
+    "drizzle-kit": "^0.31.0"
+  }
+}

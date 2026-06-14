@@ -1,0 +1,19 @@
+{
+  "name": "@vortex/events",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vortex/shared-types": "workspace:*",
+    "nats": "^2.29.0"
+  },
+  "devDependencies": {
+    "@vortex/tsconfig": "workspace:*"
+  }
+}

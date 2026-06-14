@@ -1,0 +1,15 @@
+**/node_modules
+**/dist
+**/build
+.git
+.github
+_bmad-output
+docs
+deploy
+platform
+infra
+**/*.log
+**/.DS_Store
+.env
+.env.*
+!.env.example

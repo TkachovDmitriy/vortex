@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1
+# Multi-stage build for @vortex/orders (ADR-004).
+# Build context is the repo root so Bun can resolve the workspace.
+
+# ---- install: resolve workspace dependencies ----
+FROM oven/bun:1.3-slim AS install
+WORKDIR /app
+# All workspace manifests first: --frozen-lockfile must see the whole workspace.
+COPY package.json bun.lock ./
+COPY packages/tsconfig/package.json ./packages/tsconfig/
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/events/package.json ./packages/events/
+COPY services/gateway/package.json ./services/gateway/
+COPY services/orders/package.json ./services/orders/
+COPY services/inventory/package.json ./services/inventory/
+COPY services/notifications/package.json ./services/notifications/
+COPY services/analytics/package.json ./services/analytics/
+RUN bun install --frozen-lockfile
+
+# ---- release: copy deps + source, run as non-root ----
+FROM oven/bun:1.3-slim AS release
+WORKDIR /app
+ENV NODE_ENV=production
+COPY packages ./packages
+COPY services/orders ./services/orders
+# Bun's isolated linker keeps deps per workspace — copy both the root store and
+# this service's node_modules (after source; the context excludes node_modules).
+COPY --from=install /app/node_modules ./node_modules
+COPY --from=install /app/services/orders/node_modules ./services/orders/node_modules
+# orders imports @vortex/events at runtime, whose own deps (nats) live in the
+# package's isolated node_modules — copy that too.
+COPY --from=install /app/packages/events/node_modules ./packages/events/node_modules
+USER bun
+EXPOSE 3000
+WORKDIR /app/services/orders
+CMD ["bun", "src/index.ts"]
