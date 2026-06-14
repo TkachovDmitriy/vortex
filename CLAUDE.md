@@ -14,6 +14,7 @@ Guidance for Claude Code when working in this repository.
 
 ## Golden rules
 
+0. **Learning Protocol governs how we work.** vortex is a learning vehicle — see `docs/LEARNING.md`. For the CV-gap skills (**Kubernetes, observability, networking, cloud/IaC**) the AI **defaults to tutor mode**: explain the concept + *why* + link the theory in `../platform-engineer-handbook`, let the owner implement by hand, then quiz with 2–3 interview questions. **Do not just build gap-skill artifacts** — push back once and offer tutor/pair before autopilot. The owner overrides per task with `tutor` / `pair` / `autopilot`.
 1. **Design-first.** Before writing service/infra code, there must be an architecture diagram + the relevant `.proto` contract + an ADR. Cheap to change on paper.
 2. **Decisions are documented.** Any non-trivial choice → `docs/adr/ADR-NNN-*.md`. Don't silently pick a library/pattern.
 3. **Dummy endpoints with intent.** Each endpoint demonstrates exactly one concept (a sync REST call, a NATS event, `/healthz`+`/metrics`, one Postgres touch). No real business logic.
@@ -69,7 +70,7 @@ vortex/
 └── .github/workflows/            # CI
 ```
 
-## Roadmap (each phase = a learning checkpoint, finished + understood before advancing)
+## Roadmap (each phase = a learning checkpoint, finished + understood before advancing — "done" gate in `docs/LEARNING.md`)
 
 - **Phase 0 — Design + spike:** architecture diagram + protos + ADRs; Bun compatibility spike (Hono+Connect+NATS+Drizzle).
 - **Phase 1 — Docker app-layer:** 5 services (REST + NATS events) + Postgres; multi-stage Dockerfiles + `docker compose up`; basic CI. (gRPC deferred to a later evolution phase.)
