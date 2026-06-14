@@ -72,12 +72,16 @@ vortex/
 
 ## Roadmap (each phase = a learning checkpoint, finished + understood before advancing — "done" gate in `docs/LEARNING.md`)
 
-- **Phase 0 — Design + spike:** architecture diagram + protos + ADRs; Bun compatibility spike (Hono+Connect+NATS+Drizzle).
-- **Phase 1 — Docker app-layer:** 5 services (REST + NATS events) + Postgres; multi-stage Dockerfiles + `docker compose up`; basic CI. (gRPC deferred to a later evolution phase.)
-- **Phase 2 — Kubernetes (headline):** kind → raw YAML → Helm; k9s + Tilt for DX.
-- **Phase 3 — Observability:** LGTM + OpenTelemetry; one trace REST→gRPC→NATS→consumer in Grafana.
-- **Phase 4 — GitOps:** ArgoCD pulls from monorepo + Sealed Secrets.
-- **Stretch (none block "done"):** gRPC/ConnectRPC for internal sync calls (documented evolution from REST) · polyglot Go/Rust · cloud + OpenTofu · cosign/SBOM enforcement · KEDA (scale on NATS lag) · Gateway API · service mesh.
+**Career strategy:** DevOps-offer first → grow into Platform Engineer on the job (see `../cv-improve/platform-engineer-roadmap.md`). Depth tags mark what blocks the first offer vs. what's built later. **Nothing is removed — only re-sequenced.**
+- 🔴 **Core** — offer-blocking, do solid · 🟡 **Plus** — strong differentiator, do if time before applying · 🟢 **Phase B** — deepen on the job · ⚪ **Optional** — not now.
+
+- **Phase 0 — Design + spike** 🔴: architecture diagram + protos + ADRs; Bun compatibility spike (Hono+Connect+NATS+Drizzle).
+- **Phase 1 — Docker app-layer** 🔴: 5 services (REST + NATS events) + Postgres; multi-stage Dockerfiles + `docker compose up`; basic CI + Trivy scan. (gRPC deferred to a later evolution phase.)
+- **Phase 2 — Kubernetes (headline)** 🔴: kind → raw YAML → Helm; k9s + Tilt for DX.
+- **Phase 3 — Observability** 🟡: LGTM + OpenTelemetry; one trace REST→gRPC→NATS→consumer in Grafana. (Min: metrics+dashboard; trace if time.)
+- **Phase 4 — GitOps** 🟡: ArgoCD pulls from monorepo + Sealed Secrets. (Recommended before applying — strong plus.)
+- **Phase B (on the job)** 🟢: deep security (Kyverno/cosign/SBOM/Falco) · cloud + OpenTofu (EKS/GKE, IRSA/Workload Identity) · production hardening (PDB/VPA/SLO/runbooks).
+- **Optional / deferred** ⚪: polyglot Go/Rust on shared protobuf (not now) · gRPC/ConnectRPC evolution · KEDA (scale on NATS lag) · Gateway API · service mesh.
 
 ## Conventions
 
