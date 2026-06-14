@@ -80,7 +80,8 @@ vortex/
 - **Phase 2 — Kubernetes (headline)** 🔴: kind → raw YAML → Helm; k9s + Tilt for DX.
 - **Phase 3 — Observability** 🟡: LGTM + OpenTelemetry; one trace REST→gRPC→NATS→consumer in Grafana. (Min: metrics+dashboard; trace if time.)
 - **Phase 4 — GitOps** 🟡: ArgoCD pulls from monorepo + Sealed Secrets. (Recommended before applying — strong plus.)
-- **Phase B (on the job)** 🟢: deep security (Kyverno/cosign/SBOM/Falco) · cloud + OpenTofu (EKS/GKE, IRSA/Workload Identity) · production hardening (PDB/VPA/SLO/runbooks).
+- **Cloud + IaC (core slice)** 🔴: OpenTofu module (VPC + compute) + remote state + deploy vortex to a real cloud once. DevOps roles weight Terraform/AWS heavily, so a basic cloud slice is offer-blocking (cheap path: k3s on a VPS via OpenTofu). Use **OpenTofu** (`tofu`), not Terraform — the owner already knows Terraform; OpenTofu is the differentiator (ADR-010).
+- **Phase B (on the job)** 🟢: deep security (Kyverno/cosign/SBOM/Falco) · cloud deep (managed EKS/GKE, RDS, IRSA/Workload Identity, infracost) · production hardening (PDB/VPA/SLO/runbooks).
 - **Optional / deferred** ⚪: polyglot Go/Rust on shared protobuf (not now) · gRPC/ConnectRPC evolution · KEDA (scale on NATS lag) · Gateway API · service mesh.
 
 ## Conventions
