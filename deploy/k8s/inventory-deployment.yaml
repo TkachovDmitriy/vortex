@@ -1,39 +1,39 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: orders
+  name: inventory
   namespace: vortex
   labels:
-    app: orders
+    app: inventory
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: orders
+      app: inventory
   template:
     metadata:
       labels:
-        app: orders
+        app: inventory
     spec:
       initContainers:
         - name: migrate
-          image: vortex-orders:latest
+          image: vortex-inventory:latest
           imagePullPolicy: IfNotPresent
-          command: ["sh", "-c", "bun src/db/migrate.ts"]
+          command: ["sh", "-c", "bun src/db/migrate.ts && bun src/db/seed.ts"]
           envFrom:
             - secretRef:
-                name: orders-secret
+                name: inventory-secret
       containers:
-        - name: orders
-          image: vortex-orders:latest
+        - name: inventory
+          image: vortex-inventory:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
           envFrom:
             - configMapRef:
-                name: orders-config
+                name: inventory-config
             - secretRef:
-                name: orders-secret
+                name: inventory-secret
           readinessProbe:
             httpGet:
               path: /health

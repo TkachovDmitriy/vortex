@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: vortex
+data:
+  init.sql: |
+    CREATE USER orders_app    WITH PASSWORD 'orders_pw';
+    CREATE DATABASE orders    OWNER orders_app;
+    CREATE USER inventory_app WITH PASSWORD 'inventory_pw';
+    CREATE DATABASE inventory OWNER inventory_app;
+    REVOKE CONNECT ON DATABASE orders    FROM PUBLIC;
+    REVOKE CONNECT ON DATABASE inventory FROM PUBLIC;
+    GRANT  CONNECT ON DATABASE orders    TO orders_app;
+    GRANT  CONNECT ON DATABASE inventory TO inventory_app;

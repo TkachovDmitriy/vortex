@@ -24,6 +24,11 @@ out/
 *.pem
 *.key
 
+# K8s Secret manifests hold real creds — commit *.example.yaml only.
+# Real secrets are applied locally now; Sealed Secrets in the GitOps phase.
+deploy/k8s/*-secret.yaml
+!deploy/k8s/*-secret.example.yaml
+
 # Logs
 logs/
 *.log

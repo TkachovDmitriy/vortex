@@ -1,8 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: orders-config
+  name: inventory-config
   namespace: vortex
 data:
   PORT: "3000"
-  INVENTORY_URL: "http://inventory:3000"
