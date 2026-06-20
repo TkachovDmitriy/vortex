@@ -28,7 +28,8 @@ artifacts**: the ADRs are part of the product, not an afterthought.
 | 009 | Bun compatibility spike (task zero) | ⏳ Planned |
 | 010 | OpenTofu for cloud IaC | ⏳ Planned |
 | 011 | Supply-chain security (Trivy + SBOM + cosign) | ⏳ Planned |
-| [012](ADR-012-postgres-on-kubernetes.md) | Postgres on K8s: StatefulSet + per-service least-privilege users | ✅ Accepted |
+| 012 | Postgres on K8s: StatefulSet + per-service least-privilege users | ✅ Accepted (PR pending) |
+| [013](ADR-013-gateway-api-l7-entry.md) | Gateway API (not Ingress) for L7 entry — Envoy Gateway | 🔶 Proposed |
 
 > Numbering note: there is no ADR-004 gap anymore — it was an unassigned slot from
 > the brainstorm (numbering jumped 003 → 005) and is now used for the
