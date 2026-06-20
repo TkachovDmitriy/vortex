@@ -1,0 +1,10 @@
+# Gateway ConfigMap — non-secret runtime env (read by services/gateway/src/config.ts).
+# Scaffold: fill the TODO(you) field. Mirrors services/orders/config.yaml.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  namespace: vortex
+data:
+  PORT: "3000"
+  ORDERS_URL: "http://orders:3000"
