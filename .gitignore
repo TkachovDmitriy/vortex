@@ -2,6 +2,11 @@
 _bmad/
 .claude/
 
+# Nix — build outputs + direnv cache. NOTE: flake.lock IS committed (it's the version pin).
+result
+result-*
+.direnv/
+
 # Dependencies
 node_modules/
 .pnp/
