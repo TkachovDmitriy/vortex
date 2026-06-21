@@ -1,0 +1,10 @@
+# GatewayClass — binds Gateways to the Envoy Gateway controller (cluster-scoped). ADR-013.
+# Scaffold: fill the TODO(you) row.
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: "gateway-class" # TODO(you): pick a name (e.g. vortex). The Gateway's gatewayClassName MUST match this.
+spec:
+  # Magic string that binds this class to Envoy Gateway — copy exactly, do NOT change.
+  # One char wrong = nothing reconciles, silently.
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller

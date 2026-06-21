@@ -1,0 +1,17 @@
+# Gateway — the L7 listener (HTTP :80, host vortex.local). Operator-owned. ADR-013.
+# Scaffold: fill the TODO(you) rows. cloud-provider-kind assigns this an external IP.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: "gateway" # TODO(you): pick a name (e.g. vortex-gw). HTTPRoute parentRefs.name MUST match this.
+  namespace: vortex
+spec:
+  gatewayClassName: "gateway-class" # TODO(you): MUST equal the GatewayClass metadata.name in gatewayclass.yaml
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      hostname: vortex.local
+      allowedRoutes:
+        namespaces:
+          from: Same # only routes in the vortex namespace may attach (avoids ReferenceGrant)
