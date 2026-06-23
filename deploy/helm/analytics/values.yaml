@@ -1,0 +1,18 @@
+# ── deployment values ──
+replicas: 1
+image:
+  repository: vortex-analytics
+  tag: latest
+  pullPolicy: IfNotPresent
+port: 3004
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 3004
+  initialDelaySeconds: 3
+  periodSeconds: 5
+
+# ── config values (the ConfigMap data) ──
+config:
+  PORT: "3004"
+  NATS_URL: "nats://nats:4222"

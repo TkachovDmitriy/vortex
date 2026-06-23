@@ -1,0 +1,18 @@
+# ── deployment values ──
+replicas: 1
+image:
+  repository: vortex-notifications
+  tag: latest
+  pullPolicy: IfNotPresent
+port: 3003
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 3003
+  initialDelaySeconds: 3
+  periodSeconds: 5
+
+# ── config values (the ConfigMap data) ──
+config:
+  PORT: "3003"
+  NATS_URL: "nats://nats:4222"

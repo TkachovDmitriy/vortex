@@ -1,0 +1,16 @@
+# Umbrella values — stack-level configuration.
+#
+# Each service subchart ships its own complete defaults (e.g. orders/values.yaml),
+# so this file only needs entries where the STACK overrides a service default.
+#
+# Override per service under a key named after the subchart:
+#   orders:
+#     replicas: 2
+#   gateway:
+#     service:
+#       type: NodePort
+#
+# `global:` flows into every subchart (read as .Values.global.* inside any service):
+#   global:
+#     imageRegistry: ghcr.io/tkachov
+global: {}

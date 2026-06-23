@@ -1,0 +1,24 @@
+apiVersion: v2
+type: application
+name: vortex
+version: 0.1.0
+appVersion: "latest"
+description: Umbrella chart — installs all five vortex app services as one release.
+# Services-only (option a): data (Postgres/NATS) and platform (Gateway API) layers
+# are bootstrap infra applied separately, not managed by this umbrella. See ADR-014.
+dependencies:
+  - name: gateway
+    version: 0.1.0
+    repository: "file://../gateway"
+  - name: orders
+    version: 0.1.0
+    repository: "file://../orders"
+  - name: inventory
+    version: 0.1.0
+    repository: "file://../inventory"
+  - name: notifications
+    version: 0.1.0
+    repository: "file://../notifications"
+  - name: analytics
+    version: 0.1.0
+    repository: "file://../analytics"

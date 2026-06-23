@@ -1,0 +1,34 @@
+replicas: 1
+image:
+  repository: vortex-orders
+  tag: latest
+  pullPolicy: IfNotPresent
+port: 3000
+
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: 3000
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 3000
+  initialDelaySeconds: 3
+  periodSeconds: 5
+
+config:
+  PORT: "3000"
+  INVENTORY_URL: "http://inventory:3000"
+  NATS_URL: "nats://nats:4222"
+
+initContainers:
+  - name: migrate
+    image: vortex-orders:latest
+    imagePullPolicy: IfNotPresent
+    command: ["sh", "-c", "bun src/db/migrate.ts"]
+    envFrom:
+      - secretRef:
+          name: orders-secret
+
+secret: true

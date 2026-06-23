@@ -1,0 +1,25 @@
+# ── deployment values ──
+replicas: 1
+image:
+  repository: vortex-gateway
+  tag: latest
+  pullPolicy: IfNotPresent
+port: 3000
+
+# ── Service (REST entry point, no DB → no secret/init) ──
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: 3000
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 3000
+  initialDelaySeconds: 3
+  periodSeconds: 5
+
+# ── config values (the ConfigMap data) ──
+config:
+  PORT: "3000"
+  ORDERS_URL: "http://orders:3000"
