@@ -1,0 +1,48 @@
+# NATS + JetStream — the async message broker. Stateful (JetStream persists streams
+# to disk), so a StatefulSet + PVC, mirroring the Postgres pattern (ADR-006, ADR-012).
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nats
+  namespace: vortex
+  labels:
+    app: nats
+spec:
+  serviceName: nats # ties the StatefulSet to its headless Service for stable per-pod DNS
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+        - name: nats
+          image: nats:2.10-alpine
+          # -js  enable JetStream  ·  -sd /data  persist streams to the mounted PVC
+          # -m 8222  monitoring/health endpoint (NOT the client port)
+          args: ["-js", "-sd", "/data", "-m", "8222"]
+          ports:
+            - name: client
+              containerPort: 4222
+            - name: monitor
+              containerPort: 8222
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8222
+            initialDelaySeconds: 3
+            periodSeconds: 5
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

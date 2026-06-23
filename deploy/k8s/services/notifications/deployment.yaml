@@ -1,0 +1,34 @@
+# Notifications Deployment — consumes order.created from NATS. NO Service: nothing
+# connects TO it; it dials NATS outbound. No DB → no initContainer / no secretRef.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications
+  namespace: vortex
+  labels:
+    app: notifications
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notifications
+  template:
+    metadata:
+      labels:
+        app: notifications
+    spec:
+      containers:
+        - name: notifications
+          image: vortex-notifications:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3003 # health/metrics server only — NOT exposed via a Service
+          envFrom:
+            - configMapRef:
+                name: notifications-config
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 3
+            periodSeconds: 5

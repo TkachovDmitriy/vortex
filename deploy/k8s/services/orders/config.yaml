@@ -6,3 +6,4 @@ metadata:
 data:
   PORT: "3000"
   INVENTORY_URL: "http://inventory:3000"
+  NATS_URL: "nats://nats:4222" # in-cluster broker DNS (headless Service); orders publishes order.created here

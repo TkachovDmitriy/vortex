@@ -1,7 +1,7 @@
 # ADR-013: Gateway API (not Ingress) for L7 cluster entry
 
-- **Status:** Proposed
-- **Date:** 2026-06-20
+- **Status:** Accepted
+- **Date:** 2026-06-20 (accepted 2026-06-21, after building + verifying on kind)
 - **Deciders:** project owner
 
 ## Context
@@ -58,9 +58,20 @@ plaintext HTTP on kind; defer TLS to the cloud phase.**
    **cert-manager + Let's Encrypt** (needs a real public domain) is a **cloud-phase**
    concern, to be captured in its own ADR when built.
 
-4. **kind plumbing.** The cluster must expose host ports 80/443 to the node via
-   `extraPortMappings` so the controller's listener is reachable from the host.
-   (Verify, and possibly recreate, the kind cluster before installing the controller.)
+4. **kind plumbing — `cloud-provider-kind`, not `extraPortMappings`.** Envoy
+   Gateway exposes its proxy through a `LoadBalancer` Service, which kind leaves
+   `<pending>` (no cloud LB). Rather than recreate the cluster with
+   `extraPortMappings` + a NodePort hack (kind-only, non-transferable), run
+   **`cloud-provider-kind`** on the host: it watches `LoadBalancer` Services and
+   assigns them a routable Docker-network IP — the same semantics a real cloud LB
+   provides, so the `Gateway`/`HTTPRoute` YAML stays cloud-portable with **no
+   recreate needed**. Run it with **`--gateway-channel disabled`**: its redundant
+   Gateway-API CRD installer ships pre-v1.5 CRDs that Gateway API v1.5's
+   `safe-upgrades` ValidatingAdmissionPolicy (bundled by Envoy Gateway) correctly
+   blocks; we only need its LoadBalancer support, so the channel is turned off.
+   The assigned IP is RFC1918-private (host-reachable only); test with
+   `curl --resolve vortex.local:80:<ip>` (NixOS `/etc/hosts` is read-only). On a
+   real cloud the identical manifests get a **public** LB IP instead.
 
 ## Consequences
 
@@ -97,9 +108,16 @@ plaintext HTTP on kind; defer TLS to the cloud phase.**
 - **NGINX Gateway Fabric** — valid Gateway API implementation; kept as the fallback
   if an nginx data plane is preferred. Envoy Gateway chosen for transferability to
   service-mesh contexts.
-- **NodePort / LoadBalancer Service for the gateway** — NodePort gives ugly ports
-  and no host/path routing; LoadBalancer hangs `<pending>` on kind (no cloud LB
-  provider). Both rejected as the front door; fine only as debug tools.
+- **Exposing the `gateway` Service directly via NodePort/LoadBalancer** (no Gateway
+  API) — NodePort gives ugly ports and no host/path routing; a bare LoadBalancer
+  has no L7 routing. Rejected as the front door — we want Gateway API semantics.
+  (Note: the *Gateway's* data-plane Service is itself a LoadBalancer, made routable
+  on kind by `cloud-provider-kind` — see Decision §4. That's different from
+  exposing the app Service directly.)
+- **`extraPortMappings` + NodePort to reach the Gateway on kind** — the classic
+  ingress-on-kind recipe, but requires recreating the cluster and pins the proxy to
+  a NodePort: kind-only plumbing that doesn't transfer to cloud. Rejected in favour
+  of `cloud-provider-kind`, which mirrors real cloud LB semantics (Decision §4).
 - **TLS on local kind now** — self-signed/local-CA certs demonstrate little and add
   friction. Deferred to the cloud phase where cert-manager + Let's Encrypt has a
   real story.

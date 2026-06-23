@@ -1,0 +1,9 @@
+# Notifications ConfigMap — NATS consumer (no DB). Reads PORT + NATS_URL (config.ts).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notifications-config
+  namespace: vortex
+data:
+  PORT: "3003"
+  NATS_URL: "nats://nats:4222"
