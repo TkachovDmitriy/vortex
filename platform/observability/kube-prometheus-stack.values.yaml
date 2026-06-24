@@ -1,0 +1,24 @@
+# Retention + memory — your OOM/cardinality discipline, as K8s knobs
+prometheus:
+  prometheusSpec:
+    retention: 7d
+    resources:
+      requests: { memory: 400Mi, cpu: 100m }
+      limits: { memory: 1Gi }
+    # PVC for the TSDB (kind ships a default 'standard' StorageClass)
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources: { requests: { storage: 5Gi } }
+
+    # ⚠️ THE critical gotcha — see below
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+grafana:
+  adminPassword: admin # local only; fine for kind
+
+# Lighten the kind footprint for slice 1
+alertmanager:
+  enabled: false

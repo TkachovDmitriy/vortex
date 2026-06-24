@@ -1,0 +1,96 @@
+# Grafana dashboard AS-CODE. The kube-prometheus-stack Grafana sidecar watches for
+# ConfigMaps labelled `grafana_dashboard: "1"` and auto-imports their JSON — so this
+# dashboard is reproducible + version-controlled (survives reinstalls, GitOps-ready).
+#
+# Apply:  kubectl apply -f platform/observability/dashboard-vortex.yaml
+# View:   Grafana → Dashboards → "vortex — app metrics" (appears within ~30s)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vortex-app-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  vortex-app.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "schemaVersion": 39,
+      "title": "vortex — app metrics",
+      "uid": "vortex-app",
+      "tags": ["vortex"],
+      "time": { "from": "now-15m", "to": "now" },
+      "refresh": "10s",
+      "templating": {
+        "list": [
+          {
+            "name": "datasource",
+            "type": "datasource",
+            "query": "prometheus",
+            "hide": 0,
+            "refresh": 1,
+            "current": {}
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Gateway — order requests/s",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "rate(gateway_orders_requests_total[5m])", "legendFormat": "requests" }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Orders — created/s (+ rejected)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "rate(orders_created_total[5m])", "legendFormat": "created" },
+            { "refId": "B", "expr": "rate(orders_rejected_total[5m])", "legendFormat": "rejected" }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Inventory — stock queries/s (sync path)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "rate(inventory_stock_queries_total[5m])", "legendFormat": "queries" }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Notifications — sent/s (async fan-out)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "rate(notifications_sent_total[5m])", "legendFormat": "sent" }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Analytics — orders consumed/s (async fan-out)",
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "rate(analytics_orders_total[5m])", "legendFormat": "consumed" },
+            { "refId": "B", "expr": "rate(analytics_orders_rejected_total[5m])", "legendFormat": "rejected" }
+          ]
+        }
+      ]
+    }

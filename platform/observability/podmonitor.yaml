@@ -1,0 +1,24 @@
+# PodMonitor — scrapes the Service-LESS NATS consumers (notifications, analytics)
+# by selecting their Pods directly. They have no Service, so ServiceMonitor can't
+# reach them.
+#
+# Apply:  kubectl apply -f platform/observability/podmonitor.yaml
+# Verify: Prometheus /targets → group "podMonitor/vortex/vortex-consumers" (2 UP)
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: vortex-consumers
+  namespace: vortex
+spec:
+  selector:
+    # NOT "instance: vortex" — every pod has that, so it would also match
+    # gateway/orders/inventory (already scraped via ServiceMonitor) → double scrape.
+    # Narrow to exactly the two Service-less consumers by name.
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values: [notifications, analytics]
+  podMetricsEndpoints:
+    - port: http          # the NAMED container port (common.deployment)
+      path: /metrics
+      interval: 15s
