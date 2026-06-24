@@ -1,0 +1,21 @@
+# ServiceMonitor — tells the Prometheus Operator to scrape the Service-fronted
+# vortex apps (gateway, orders, inventory). Operator turns this CRD into scrape
+# config; no prometheus.yml editing. Requires the kube-prometheus-stack CRDs.
+#
+# Apply:  kubectl apply -f platform/observability/servicemonitor.yaml
+# Verify: Prometheus /targets → group "serviceMonitor/vortex/vortex-services" (3 UP)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vortex-services
+  namespace: vortex
+spec:
+  selector:
+    # Only gateway/orders/inventory HAVE Services, and a ServiceMonitor selects
+    # Services — so the shared release label cleanly picks exactly those three.
+    matchLabels:
+      app.kubernetes.io/instance: vortex
+  endpoints:
+    - port: http          # the NAMED Service port (common.service)
+      path: /metrics
+      interval: 15s

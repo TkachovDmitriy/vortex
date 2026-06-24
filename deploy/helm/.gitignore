@@ -1,0 +1,4 @@
+# Vendored Helm chart dependencies — regenerate with `helm dependency build`.
+# Per ADR-014: the .tgz are NOT committed (like node_modules); Chart.lock IS
+# committed (the reproducible pin, like package-lock.json).
+**/charts/*.tgz

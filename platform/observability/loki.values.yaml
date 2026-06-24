@@ -1,0 +1,51 @@
+# Loki — monolithic (SingleBinary) on kind, filesystem storage. See ADR-016.
+# Install:
+#   helm repo add grafana https://grafana.github.io/helm-charts ; helm repo update
+#   helm install loki grafana/loki -n monitoring -f platform/observability/loki.values.yaml
+deploymentMode: SingleBinary
+
+loki:
+  auth_enabled: false              # no multi-tenant auth on a learning cluster
+  commonConfig:
+    replication_factor: 1          # single instance
+  storage:
+    type: filesystem               # no object store on kind
+  schemaConfig:                    # required by recent chart versions
+    configs:
+      - from: "2024-01-01"
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+  limits_config:
+    retention_period: 168h         # 7d
+
+singleBinary:
+  replicas: 1
+  persistence:
+    enabled: true
+    size: 5Gi
+
+# We are monolithic — zero out the scalable-mode components.
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
+
+# Don't deploy the extras on kind (object store, nginx gateway, canary, tests, caches).
+minio:
+  enabled: false
+gateway:
+  enabled: false
+lokiCanary:
+  enabled: false
+test:
+  enabled: false
+chunksCache:
+  enabled: false
+resultsCache:
+  enabled: false
