@@ -1,0 +1,50 @@
+# Grafana Alloy — DaemonSet collector. Discovers pods, tails their logs via the
+# K8s API, labels them, and pushes to Loki. See ADR-016.
+# (Same Alloy will later receive OTLP traces → Tempo when the tracing slice lands.)
+# Install:
+#   helm install alloy grafana/alloy -n monitoring -f platform/observability/alloy.values.yaml
+controller:
+  type: daemonset                # one collector per node
+
+alloy:
+  configMap:
+    content: |-
+      // ── discover every pod in the cluster ──
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+
+      // ── keep a small, low-cardinality label set (Loki indexes labels!) ──
+      discovery.relabel "pod_logs" {
+        targets = discovery.kubernetes.pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          target_label  = "app"
+        }
+      }
+
+      // ── read container logs via the K8s API, forward to the Loki writer ──
+      loki.source.kubernetes "pods" {
+        targets    = discovery.relabel.pod_logs.output
+        forward_to = [loki.write.default.receiver]
+      }
+
+      // ── push to Loki (SingleBinary service 'loki' on 3100) ──
+      loki.write "default" {
+        endpoint {
+          url = "http://loki:3100/loki/api/v1/push"
+        }
+      }

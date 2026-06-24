@@ -1,0 +1,22 @@
+# Adds Loki as a Grafana datasource. The kube-prometheus-stack Grafana runs a
+# datasource sidecar that watches for ConfigMaps labelled `grafana_datasource: "1"`
+# and loads them — so logs appear in the SAME Grafana as metrics. See ADR-016.
+#
+# Apply:  kubectl apply -f platform/observability/loki-datasource.yaml
+# View:   Grafana → Explore → "Loki" → LogQL  {namespace="vortex"}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-datasource
+  namespace: monitoring
+  labels:
+    grafana_datasource: "1"
+data:
+  loki-datasource.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki:3100
+        isDefault: false
