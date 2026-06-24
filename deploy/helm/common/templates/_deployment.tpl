@@ -26,7 +26,8 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
           ports:
-            - containerPort: {{ .Values.port }}
+            - name: http
+              containerPort: {{ .Values.port }}
           {{- if or .Values.config .Values.secret }}
           envFrom:
             {{- if .Values.config }}
