@@ -16,5 +16,5 @@ module "compute" {
   instance_type     = var.instance_type
   subnet_id         = module.network.subnet_id
   security_group_id = module.network.security_group_id
-  public_key        = file(var.public_key_path)
+  public_key        = file(pathexpand(var.public_key_path))
 }

@@ -48,6 +48,8 @@ yarn-error.log*
 *.tfstate.*
 *.tfvars
 !*.tfvars.example
+backend.hcl
+!backend.hcl.example
 crash.log
 
 # Kubernetes / Helm

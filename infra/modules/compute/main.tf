@@ -31,8 +31,14 @@ resource "aws_instance" "node" {
   vpc_security_group_ids = [var.security_group_id]
   key_name               = aws_key_pair.this.key_name
 
-  # Bootstrap k3s on first boot (cloud-init runs user_data once).
-  user_data = file("${path.module}/user-data.sh")
+  # Bootstrap k3s on first boot (cloud-init runs user_data once). The EIP address
+  # is baked in here so the API server cert (--tls-san) is valid for it immediately.
+  # user_data only runs at first boot, so changing it must recreate the node —
+  # otherwise the new script never runs (default is false).
+  user_data                   = templatefile("${path.module}/user-data.sh.tftpl", {
+    public_ip = aws_eip.node.public_ip
+  })
+  user_data_replace_on_change = true
 
   root_block_device {
     volume_size = var.root_volume_size
@@ -42,10 +48,16 @@ resource "aws_instance" "node" {
   tags = merge(var.tags, { Name = "${var.name}-node" })
 }
 
-# Stable public IP, decoupled from the instance's lifecycle.
+# Stable public IP, allocated BEFORE the instance so its address can be baked
+# into user_data (--tls-san). Associated to the instance separately below to
+# avoid a dependency cycle (instance needs the EIP address → EIP must exist first).
 resource "aws_eip" "node" {
-  instance = aws_instance.node.id
-  domain   = "vpc"
+  domain = "vpc"
 
   tags = merge(var.tags, { Name = "${var.name}-eip" })
+}
+
+resource "aws_eip_association" "node" {
+  instance_id   = aws_instance.node.id
+  allocation_id = aws_eip.node.id
 }

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Runs once on first boot via cloud-init. Installs a single-node k3s cluster.
+# ${public_ip} is injected by OpenTofu (templatefile) — the EIP this node is
+# reached at — so the API server cert (--tls-san) is valid for it from the start.
+# --write-kubeconfig-mode 644 lets us read the kubeconfig without sudo.
+set -euo pipefail
+
+curl -sfL https://get.k3s.io | sh -s - \
+  --write-kubeconfig-mode 644 \
+  --tls-san "${public_ip}"
