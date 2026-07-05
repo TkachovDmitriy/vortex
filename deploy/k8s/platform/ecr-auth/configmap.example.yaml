@@ -1,0 +1,10 @@
+# Copy to configmap.yaml (gitignored — it embeds your account id) and fill in.
+# ECR_REGISTRY comes from `tofu output ecr_registry_url`.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ecr-auth-config
+  namespace: vortex
+data:
+  AWS_REGION: "eu-central-1"
+  ECR_REGISTRY: "<account-id>.dkr.ecr.eu-central-1.amazonaws.com"

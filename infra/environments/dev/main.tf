@@ -1,5 +1,13 @@
 locals {
   name = "vortex-dev"
+
+  services = ["gateway", "orders", "inventory", "notifications", "analytics"]
+}
+
+# Container registry: one private ECR repo per service (ADR-017).
+module "ecr" {
+  source           = "../../modules/ecr"
+  repository_names = [for svc in local.services : "vortex-${svc}"]
 }
 
 # Network layer: VPC, subnet, IGW, route table, security group (cheap/stable).

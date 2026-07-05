@@ -1,0 +1,57 @@
+# Refreshes the ECR pull Secret before its ~12h token expires (ADR-017 §3).
+# The pod authenticates to ECR via the node's instance role (IMDS) — no static creds.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ecr-cred-refresh
+  namespace: vortex
+spec:
+  schedule: "0 */6 * * *" # every 6h — comfortably under ECR's 12h token TTL
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: ecr-cred-refresh
+          restartPolicy: OnFailure
+          containers:
+            - name: refresh
+              # Public image (chicken-egg: the refresher can't live in the ECR it unlocks).
+              # aws-cli image ships no kubectl, so we fetch one at runtime.
+              image: public.ecr.aws/aws-cli/aws-cli:latest
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -euo pipefail
+                  curl -sSL -o /tmp/kubectl "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+                  chmod +x /tmp/kubectl
+                  # mint a ~12h ECR token via the instance role (IMDS) — no stored password
+                  PASSWORD="$(aws ecr get-login-password --region "$AWS_REGION")"
+                  # idempotently (re)write the docker-registry pull secret
+                  /tmp/kubectl create secret docker-registry "$SECRET_NAME" \
+                    --docker-server="$ECR_REGISTRY" \
+                    --docker-username=AWS \
+                    --docker-password="$PASSWORD" \
+                    --namespace="$POD_NAMESPACE" \
+                    --dry-run=client -o yaml | /tmp/kubectl apply -f -
+              envFrom:
+                - configMapRef:
+                    name: ecr-auth-config # AWS_REGION + ECR_REGISTRY
+              env:
+                - name: SECRET_NAME
+                  value: ecr-pull-secret
+                - name: KUBECTL_VERSION
+                  value: v1.31.3
+                - name: POD_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi

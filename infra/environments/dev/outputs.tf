@@ -7,3 +7,13 @@ output "kubeconfig_hint" {
   description = "Command to fetch the kubeconfig pointed at the node."
   value       = module.compute.kubeconfig_hint
 }
+
+output "ecr_registry_url" {
+  description = "ECR registry host — for `docker login` and Helm global.imageRegistry."
+  value       = module.ecr.registry_url
+}
+
+output "ecr_repository_urls" {
+  description = "Per-service ECR repository URLs (push targets)."
+  value       = module.ecr.repository_urls
+}

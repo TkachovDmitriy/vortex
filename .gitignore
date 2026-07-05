@@ -56,6 +56,9 @@ crash.log
 *.kubeconfig
 charts/*.tgz
 
+# ECR auth ConfigMap embeds the account-id registry host — keep out of git (commit the .example)
+deploy/k8s/platform/ecr-auth/configmap.yaml
+
 # OS / editor
 .DS_Store
 Thumbs.db
