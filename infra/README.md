@@ -84,8 +84,21 @@ tofu init                                  # picks up the S3 backend
 tofu apply                                 # bring up network + ephemeral k3s node
 # ... fetch kubeconfig (see outputs), then deploy the app SEPARATELY via Helm (ADR-014) ...
 helm install vortex deploy/helm/vortex -n vortex --create-namespace
-tofu destroy                               # tear the paid compute back down
+
+# teardown: destroy the PAID compute only; keep free network + cents-level ECR/state
+# (ADR-018 — images stay in ECR → no re-push next apply)
+tofu destroy -target=module.compute
 ```
+
+## Lifecycle: ephemeral compute vs persistent infra (ADR-018)
+
+Not everything shares a lifecycle/cost: **compute** (EC2+EIP) is the only real cost and
+is recreated each session; **network** (free), **ECR+images** (~cents), and the **state
+bucket** persist. So teardown destroys `module.compute` only (`-target`) — a full
+`tofu destroy` would fail on non-empty ECR repos and needlessly drop the free network.
+The documented evolution (ADR-018 §4) splits these into a **persistent** root
+(network+ECR) and an **ephemeral** root (compute) so teardown is a clean `tofu destroy`
+with no `-target`.
 
 ## Guardrails (ADR-010 §8)
 
