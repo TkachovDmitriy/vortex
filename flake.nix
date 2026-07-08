@@ -35,6 +35,10 @@
             cloud-provider-kind # LoadBalancer support for kind (Gateway API, ADR-013)
             k9s # cluster TUI (DX)
 
+            # --- Cloud / IaC (ADR-010) ---
+            opentofu # `tofu` — OpenTofu, NOT terraform (MPL vs BSL)
+            awscli2 # `aws` — configure creds + sanity-check (aws sts get-caller-identity)
+
             # --- misc ---
             go # builds cloud-provider-kind deps / future polyglot services
           ];
@@ -44,7 +48,7 @@
           shellHook = ''
             echo ""
             echo "🌀 vortex devshell"
-            echo "   bun $(bun --version)  ·  kubectl $(kubectl version --client -o yaml 2>/dev/null | grep gitVersion | head -1 | awk '{print $2}')  ·  kind $(kind version 2>/dev/null | awk '{print $2}')  ·  helm $(helm version --short 2>/dev/null)"
+            echo "   bun $(bun --version)  ·  kubectl $(kubectl version --client -o yaml 2>/dev/null | grep gitVersion | head -1 | awk '{print $2}')  ·  kind $(kind version 2>/dev/null | awk '{print $2}')  ·  helm $(helm version --short 2>/dev/null)  ·  tofu $(tofu version 2>/dev/null | head -1 | awk '{print $2}')"
             echo "   tip: cloud-provider-kind needs the system docker socket — run it as: sudo \$(which cloud-provider-kind)"
             echo ""
           '';

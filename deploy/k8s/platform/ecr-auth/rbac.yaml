@@ -1,0 +1,25 @@
+# Least-privilege: the refresh SA may manage Secrets in the vortex namespace only.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ecr-cred-refresh
+  namespace: vortex
+rules:
+  - apiGroups: [""] # core API group — where Secrets live
+    resources: ["secrets"]
+    verbs: ["get", "create", "update", "patch"] # no delete, no other resources
+---
+# Grants the Role above to the ecr-cred-refresh ServiceAccount.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ecr-cred-refresh
+  namespace: vortex
+subjects:
+  - kind: ServiceAccount
+    name: ecr-cred-refresh
+    namespace: vortex
+roleRef:
+  kind: Role
+  name: ecr-cred-refresh
+  apiGroup: rbac.authorization.k8s.io
