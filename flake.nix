@@ -39,6 +39,10 @@
             opentofu # `tofu` — OpenTofu, NOT terraform (MPL vs BSL)
             awscli2 # `aws` — configure creds + sanity-check (aws sts get-caller-identity)
 
+            # --- GitOps (Phase 4) ---
+            kubeseal # seal plaintext Secrets into commit-safe SealedSecret CRDs
+            argocd # ArgoCD CLI — login/app/sync from the terminal
+
             # --- misc ---
             go # builds cloud-provider-kind deps / future polyglot services
           ];
