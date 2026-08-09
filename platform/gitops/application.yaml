@@ -1,0 +1,35 @@
+# ArgoCD Application — declaratively manages the vortex umbrella Helm chart.
+# ArgoCD watches git (source) and continuously reconciles it into the cluster (destination).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vortex
+  namespace: argocd # Application objects live in the argocd namespace, not the app namespace
+spec:
+  project: default
+
+  source:
+    # Canonical URL as ArgoCD sees it from inside the cluster (public repo -> no creds needed).
+    repoURL: https://github.com/TkachovDmitriy/vortex.git
+    targetRevision: develop # branch ArgoCD tracks; new commits are auto-followed
+    path: deploy/helm/vortex # the umbrella chart; ArgoCD auto-detects Helm from Chart.yaml
+    helm:
+      parameters:
+        # ECR registry prefix for all service images (replaces the old `helm install --set`).
+        # An AWS account id is an identifier, not a credential — access is IAM-gated — so it's
+        # safe to commit, and GitOps requires config to live in git.
+        - name: global.imageRegistry
+          value: "709569057692.dkr.ecr.eu-central-1.amazonaws.com"
+
+  destination:
+    server: https://kubernetes.default.svc # the cluster ArgoCD runs in (in-cluster)
+    namespace: vortex # where the app gets deployed
+
+  # Full GitOps: ArgoCD applies git changes automatically, reverts drift, and prunes
+  # resources removed from git. Suitable for this learning cluster (prod would gate sync).
+  syncPolicy:
+    automated:
+      selfHeal: true # revert manual kubectl edits back to git state
+      prune: true # delete resources removed from git
+    syncOptions:
+      - CreateNamespace=true # create the `vortex` namespace if missing
