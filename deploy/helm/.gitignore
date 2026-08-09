@@ -1,4 +1,8 @@
-# Vendored Helm chart dependencies — regenerate with `helm dependency build`.
-# Per ADR-014: the .tgz are NOT committed (like node_modules); Chart.lock IS
-# committed (the reproducible pin, like package-lock.json).
-**/charts/*.tgz
+# Vendored Helm chart dependencies (charts/*.tgz).
+#
+# ADR-014 originally gitignored these (like node_modules), committing only Chart.lock.
+# GitOps amends that: ArgoCD's repo-server runs `helm dependency build` only at the top
+# level (not recursively), so multi-level local deps (vortex -> orders -> common) fail to
+# render unless the vendored .tgz are present in git. We therefore commit them so ArgoCD
+# gets self-contained, renderable sources. Future: publish `common` as an OCI chart to ECR
+# to drop the binaries from git again (see ADR-019).
