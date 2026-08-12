@@ -65,3 +65,7 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# ADR-020: Sealed Secrets private sealing key backup — NEVER commit (master key)
+*sealed-secrets-key*.yaml
+sealed-secrets-key.backup.yaml
