@@ -1,0 +1,31 @@
+# Child app — the vortex services umbrella Helm chart.
+# sync-wave "1": runs after sealed-secrets (wave "0"), so the Secrets the pods
+# consume already exist and pods avoid CreateContainerConfigError churn.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vortex
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/TkachovDmitriy/vortex.git
+    targetRevision: develop
+    path: deploy/helm/vortex # the umbrella chart; ArgoCD auto-detects Helm from Chart.yaml
+    helm:
+      parameters:
+        # ECR registry prefix for all service images (an account id is IAM-gated, not a
+        # credential — safe to commit; GitOps requires config in git). See ADR-017/019.
+        - name: global.imageRegistry
+          value: "709569057692.dkr.ecr.eu-central-1.amazonaws.com"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vortex
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true

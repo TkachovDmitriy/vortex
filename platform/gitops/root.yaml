@@ -1,0 +1,23 @@
+# App-of-Apps root — the ONE Application you apply by hand on a fresh cluster.
+# It manages the child Applications under platform/gitops/apps/, so from here on
+# ArgoCD (not kubectl) owns what runs in the cluster. See ADR-020.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vortex-root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/TkachovDmitriy/vortex.git
+    targetRevision: develop
+    path: platform/gitops/apps # a directory of child Application manifests
+    directory:
+      recurse: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd # child Applications are created in the argocd namespace
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
