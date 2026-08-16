@@ -17,3 +17,8 @@ output "ecr_repository_urls" {
   description = "Per-service ECR repository URLs (push targets)."
   value       = module.ecr.repository_urls
 }
+
+output "ci_role_arn" {
+  description = "CI role ARN — set as role-to-assume in the GitHub Actions workflow."
+  value       = module.ci_oidc.role_arn
+}

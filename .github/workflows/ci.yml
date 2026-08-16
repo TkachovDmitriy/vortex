@@ -1,17 +1,21 @@
 name: CI
 
-# Checks-only slice: typecheck + per-service image build + Trivy scan.
-# ECR push (via OIDC) is a follow-up — this workflow never touches AWS.
+# typecheck + per-service image build + Trivy scan, then push to ECR on develop.
+# AWS auth is keyless via GitHub OIDC (no static keys) — see ADR-021.
 on:
   pull_request:
     branches: [develop]
   push:
     branches: [develop]
 
-# Cancel superseded runs on the same ref (saves minutes on rapid pushes).
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REGISTRY: 709569057692.dkr.ecr.eu-central-1.amazonaws.com # account id is IAM-gated, not a secret (ADR-017/019)
+  CI_ROLE_ARN: arn:aws:iam::709569057692:role/vortex-dev-ci-ecr-push # = `tofu output ci_role_arn`
 
 jobs:
   quality:
@@ -22,14 +26,16 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3" # match the Dockerfiles (oven/bun:1.3-slim)
-      # --frozen-lockfile fails if bun.lock is stale — the CI equivalent of `npm ci`.
-      - run: bun install --frozen-lockfile
-      - run: bun run typecheck # runs `tsc --noEmit` across every workspace (--filter '*')
+      - run: bun install --frozen-lockfile # fails if bun.lock is stale (like `npm ci`)
+      - run: bun run typecheck # `tsc --noEmit` across every workspace (--filter '*')
       # TODO: add `bun test` once services have tests; add a lint step once configured.
 
   build-scan:
-    name: build + scan
+    name: build + scan + push
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # REQUIRED: lets the job request the OIDC JWT for AWS. Forget this → creds fail to load.
+      contents: read
     strategy:
       fail-fast: false # one bad service shouldn't hide the others' results
       matrix:
@@ -37,25 +43,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
-      # Build context is the REPO ROOT (not the service dir): the multi-stage
-      # Dockerfile copies the whole Bun workspace to resolve deps. `load: true`
-      # puts the image in the local daemon so Trivy can scan it. No push here.
+
+      # Build context is the REPO ROOT: the multi-stage Dockerfile copies the whole
+      # Bun workspace to resolve deps. `load: true` keeps the image local so Trivy
+      # (and the push below) can use it. Immutable tag = git SHA (never `latest`).
       - uses: docker/build-push-action@v6
         with:
           context: .
           file: services/${{ matrix.service }}/Dockerfile
           push: false
           load: true
-          tags: vortex-${{ matrix.service }}:${{ github.sha }}
+          tags: ${{ env.ECR_REGISTRY }}/vortex-${{ matrix.service }}:${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
-      # Fail the job on fixable HIGH/CRITICAL CVEs; ignore-unfixed avoids noise
-      # from vulns with no upstream patch yet.
+
+      # Gate the push: fail on fixable HIGH/CRITICAL CVEs before anything reaches ECR.
       - uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: vortex-${{ matrix.service }}:${{ github.sha }}
+          image-ref: ${{ env.ECR_REGISTRY }}/vortex-${{ matrix.service }}:${{ github.sha }}
           scanners: vuln
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: "1"
           format: table
+
+      # --- push only on develop, and only after the scan passed (keyless OIDC) ---
+      - name: AWS auth (OIDC, keyless)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.CI_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Push image to ECR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        run: |
+          aws ecr get-login-password --region "$AWS_REGION" \
+            | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+          docker push "$ECR_REGISTRY/vortex-${{ matrix.service }}:${{ github.sha }}"
