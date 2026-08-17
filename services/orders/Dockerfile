@@ -16,7 +16,7 @@ COPY services/inventory/package.json ./services/inventory/
 COPY services/notifications/package.json ./services/notifications/
 COPY services/analytics/package.json ./services/analytics/
 
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --production
 
 # ---- release: copy deps + source, run as non-root ----
 FROM oven/bun:1.3-slim AS release
@@ -33,6 +33,8 @@ COPY --from=install /app/services/orders/node_modules ./services/orders/node_mod
 # orders imports @vortex/events at runtime, whose own deps (nats) live in the
 # package's isolated node_modules — copy that too.
 COPY --from=install /app/packages/events/node_modules ./packages/events/node_modules
+# Patch base-image OS packages against known CVEs (Trivy gates on HIGH/CRITICAL).
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 USER bun
 EXPOSE 3000
 WORKDIR /app/services/orders
