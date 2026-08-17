@@ -10,6 +10,14 @@ module "ecr" {
   repository_names = [for svc in local.services : "vortex-${svc}"]
 }
 
+# Keyless CI → ECR push via GitHub Actions OIDC (no static keys, ADR-021).
+module "ci_oidc" {
+  source              = "../../modules/ci-oidc"
+  name                = local.name
+  github_repo         = var.github_repo
+  ecr_repository_arns = module.ecr.repository_arns
+}
+
 # Network layer: VPC, subnet, IGW, route table, security group (cheap/stable).
 module "network" {
   source       = "../../modules/network"

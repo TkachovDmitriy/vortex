@@ -20,3 +20,9 @@ variable "public_key_path" {
   type        = string
   default     = "~/.ssh/id_ed25519.pub"
 }
+
+variable "github_repo" {
+  description = "GitHub repo (OWNER/REPO) whose Actions may assume the CI role via OIDC."
+  type        = string
+  default     = "TkachovDmitriy/vortex"
+}

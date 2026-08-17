@@ -15,7 +15,7 @@ COPY services/orders/package.json ./services/orders/
 COPY services/inventory/package.json ./services/inventory/
 COPY services/notifications/package.json ./services/notifications/
 COPY services/analytics/package.json ./services/analytics/
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --production
 
 # ---- release: copy deps + source, run as non-root ----
 FROM oven/bun:1.3-slim AS release
@@ -27,6 +27,8 @@ COPY services/inventory ./services/inventory
 # this service's node_modules (after source; the context excludes node_modules).
 COPY --from=install /app/node_modules ./node_modules
 COPY --from=install /app/services/inventory/node_modules ./services/inventory/node_modules
+# Patch base-image OS packages against known CVEs (Trivy gates on HIGH/CRITICAL).
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 USER bun
 EXPOSE 3000
 WORKDIR /app/services/inventory
