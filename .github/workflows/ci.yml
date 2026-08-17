@@ -58,14 +58,22 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
       # Gate the push: fail on fixable HIGH/CRITICAL CVEs before anything reaches ECR.
-      - uses: aquasecurity/trivy-action@v0.33.1
-        with:
-          image-ref: ${{ env.ECR_REGISTRY }}/vortex-${{ matrix.service }}:${{ github.sha }}
-          scanners: vuln
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: "1"
-          format: table
+      # Run Trivy as its official OCI image (not trivy-action) — the action's bundled
+      # setup-trivy installer flakily fails downloading the binary from GitHub releases
+      # (aquasecurity/trivy-action#516). The image is pulled from a registry and scans
+      # the locally-loaded image via the mounted docker socket. Deterministic, no installer.
+      - name: Scan image with Trivy
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:0.65.0 image \
+              --scanners vuln \
+              --severity HIGH,CRITICAL \
+              --ignore-unfixed \
+              --exit-code 1 \
+              --no-progress \
+              --format table \
+              "$ECR_REGISTRY/vortex-${{ matrix.service }}:${{ github.sha }}"
 
       # --- push only on develop, and only after the scan passed (keyless OIDC) ---
       - name: AWS auth (OIDC, keyless)
