@@ -13,4 +13,7 @@
 # `global:` flows into every subchart (read as .Values.global.* inside any service):
 #   global:
 #     imageRegistry: ghcr.io/tkachov
+#     imageTag: <git-sha>   # deploy-time image tag; CI's image-bump job writes this
+#                           # (single knob for main + migrate initContainers). Unset =>
+#                           # falls back to each service's image.tag (latest) for local dev.
 global: {}

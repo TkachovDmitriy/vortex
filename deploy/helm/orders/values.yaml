@@ -24,7 +24,7 @@ config:
 
 initContainers:
   - name: migrate
-    image: vortex-orders:latest
+    image: vortex-orders
     imagePullPolicy: IfNotPresent
     command: ["sh", "-c", "bun src/db/migrate.ts"]
     envFrom:

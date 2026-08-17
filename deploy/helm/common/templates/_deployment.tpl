@@ -17,16 +17,18 @@ spec:
       labels:
         {{- include "common.labels" . | nindent 8 }}
     spec:
+      {{- $tag := .Values.global.imageTag | default .Values.image.tag | default .Chart.AppVersion }}
       {{- with .Values.initContainers }}
       initContainers:
         {{- range . }}
-        - image: "{{ if $.Values.global.imageRegistry }}{{ $.Values.global.imageRegistry }}/{{ end }}{{ .image }}"
+        {{- /* append the resolved tag only when the image has no explicit tag */}}
+        - image: "{{ if $.Values.global.imageRegistry }}{{ $.Values.global.imageRegistry }}/{{ end }}{{ .image }}{{ if not (contains ":" .image) }}:{{ $tag }}{{ end }}"
           {{- toYaml (omit . "image") | nindent 10 }}
         {{- end }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ if .Values.global.imageRegistry }}{{ .Values.global.imageRegistry }}/{{ end }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ if .Values.global.imageRegistry }}{{ .Values.global.imageRegistry }}/{{ end }}{{ .Values.image.repository }}:{{ $tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
           ports:
             - name: http
