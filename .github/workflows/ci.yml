@@ -58,7 +58,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
       # Gate the push: fail on fixable HIGH/CRITICAL CVEs before anything reaches ECR.
-      - uses: aquasecurity/trivy-action@0.28.0
+      - uses: aquasecurity/trivy-action@v0.33.1
         with:
           image-ref: ${{ env.ECR_REGISTRY }}/vortex-${{ matrix.service }}:${{ github.sha }}
           scanners: vuln
