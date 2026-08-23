@@ -3,6 +3,11 @@
 Pull-based delivery via ArgoCD, structured as **App-of-Apps**. Secrets live in git as
 `SealedSecret` CRDs (safe to commit); the sealing key is persisted out-of-band.
 
+> For the **full end-to-end bring-up** (compute up → kubeconfig → this bootstrap → verify →
+> teardown), including the **restore-vs-re-seal** branch when the sealing key is lost, see
+> [`docs/runbooks/dev-cluster-bring-up.md`](../../docs/runbooks/dev-cluster-bring-up.md).
+> This file is just the GitOps detail.
+
 ```
 root.yaml              App-of-Apps root → apps/  (the ONE manual apply)
 apps/
