@@ -57,6 +57,11 @@
             echo "🌀 vortex devshell"
             echo "   bun $(bun --version)  ·  kubectl $(kubectl version --client -o yaml 2>/dev/null | grep gitVersion | head -1 | awk '{print $2}')  ·  kind $(kind version 2>/dev/null | awk '{print $2}')  ·  helm $(helm version --short 2>/dev/null)  ·  tofu $(tofu version 2>/dev/null | head -1 | awk '{print $2}')"
             echo "   tip: cloud-provider-kind needs the system docker socket — run it as: sudo \$(which cloud-provider-kind)"
+            # Auto-point kubectl at the dev k3s kubeconfig if it's been fetched (ADR-018).
+            if [ -f "$PWD/vortex-dev.kubeconfig" ]; then
+              export KUBECONFIG="$PWD/vortex-dev.kubeconfig"
+              echo "   KUBECONFIG → vortex-dev.kubeconfig (dev k3s node)"
+            fi
             echo ""
           '';
         };
