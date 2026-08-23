@@ -89,3 +89,34 @@ jobs:
           aws ecr get-login-password --region "$AWS_REGION" \
             | docker login --username AWS --password-stdin "$ECR_REGISTRY"
           docker push "$ECR_REGISTRY/vortex-${{ matrix.service }}:${{ github.sha }}"
+
+  # --- image-bump: close the CI→CD loop (GitOps) ---
+  # ArgoCD watches git, not the registry. After all images are pushed, write the
+  # immutable SHA tag into the umbrella chart's single knob (global.imageTag) and
+  # commit it back to develop with [skip ci]. ArgoCD's git-diff then triggers the
+  # rollout. Runs only on develop, only after every image has been pushed. See ADR-021.
+  image-bump:
+    name: bump image tag → git
+    needs: build-scan
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the bump commit back to develop
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop # branch the bump commit off the current tip
+
+      # ubuntu-latest ships mikefarah `yq` — no install needed.
+      - name: Write SHA into global.imageTag
+        run: yq -i '.global.imageTag = "${{ github.sha }}"' deploy/helm/vortex/values.yaml
+
+      - name: Commit & push the bump
+        run: |
+          if git diff --quiet -- deploy/helm/vortex/values.yaml; then
+            echo "imageTag already at ${{ github.sha }} — nothing to bump"; exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "[CI] bump image tag to ${{ github.sha }} [skip ci]"
+          git push origin HEAD:develop

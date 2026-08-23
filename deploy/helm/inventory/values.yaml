@@ -18,7 +18,7 @@ service:
 # ── initContainer — migrate + seed, passed through verbatim ──
 initContainers:
   - name: migrate
-    image: vortex-inventory:latest
+    image: vortex-inventory
     imagePullPolicy: IfNotPresent
     command: ["sh", "-c", "bun src/db/migrate.ts && bun src/db/seed.ts"]
     envFrom:
