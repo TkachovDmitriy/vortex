@@ -43,6 +43,9 @@
             kubeseal # seal plaintext Secrets into commit-safe SealedSecret CRDs
             argocd # ArgoCD CLI — login/app/sync from the terminal
 
+            # --- CI / GitHub ---
+            gh # GitHub CLI — open/merge PRs, watch Actions runs
+
             # --- misc ---
             go # builds cloud-provider-kind deps / future polyglot services
           ];
